@@ -1,7 +1,9 @@
 from ib_insync import *
 from src.req import OrderDetail
 
+
 def Order(item: OrderDetail):
+    util.startLoop()
     ib = IB()
     ib.connect('127.0.0.1', 7497, clientId=1)
     stock = Forex(item.symbol)

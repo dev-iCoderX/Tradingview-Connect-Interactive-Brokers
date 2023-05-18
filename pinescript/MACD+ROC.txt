@@ -1,0 +1,71 @@
+//@version=5
+indicator(title='MACD+ROC', shorttitle='MACD+ROC', max_labels_count = 500, max_lines_count = 500)
+
+type setup
+    string symbol
+    string typeOrder
+    string side
+    string entry
+    string amount
+var setup = setup.new()
+setup.symbol := syminfo.ticker
+setup.side := "SELL"
+
+macd_signal = input(title='MACD Enable', defval=true, group="MACD Settings")
+macd_src = input(title='MACD Source', defval=close, group="MACD Settings")
+macd_res = input.timeframe(title="MACD Resolution", defval="W", group="MACD Settings")
+fast_length = input(title='MACD Fast Length', defval=12, group="MACD Settings")
+slow_length = input(title='MACD Slow Length', defval=26, group="MACD Settings")
+signal_length = input.int(title='MACD Signal Smoothing', minval=1, maxval=50, defval=9, group="MACD Settings")
+sma_source = input(title='MACD Simple MA (Oscillator)', defval=false, group="MACD Settings")
+sma_signal = input(title='MACD Simple MA (Signal Line)', defval=false, group="MACD Settings")
+roc_signal = input(title='ROC Enable', defval=true, group="ROC Settings")
+roc_src = input(title='ROC Source', defval=close, group="ROC Settings")
+roc_res = input.timeframe(title="ROC Resolution", defval="D", group="ROC Settings")
+roc_length = input(title='ROC Length', defval=12, group="ROC Settings")
+
+//s = request.security(syminfo.ticker, macd_res, close)
+
+
+// Plot colors
+col_grow_above = #26A69A
+col_grow_below = #FFCDD2
+col_fall_above = #B2DFDB
+col_fall_below = #EF5350
+col_macd = #0094ff
+col_signal = #ff6a00
+
+// Calculating
+sma_1_s = ta.sma(macd_src, fast_length)
+ema_1_s = ta.ema(macd_src, fast_length)
+
+[sma_1, ema_1] = request.security(syminfo.tickerid, macd_res, [sma_1_s, ema_1_s])
+fast_ma = sma_source ? sma_1 : ema_1
+sma_2_s = ta.sma(macd_src, slow_length)
+ema_2_s = ta.ema(macd_src, slow_length)
+[sma_2, ema_2] = request.security(syminfo.tickerid, macd_res, [sma_2_s, ema_2_s])
+slow_ma = sma_source ? sma_2 : ema_2
+macd = fast_ma - slow_ma
+sma_3_s = ta.sma(macd, signal_length)
+ema_3_s = ta.ema(macd, signal_length)
+[sma_3, ema_3] = request.security(syminfo.tickerid, macd_res, [sma_3_s, ema_3_s])
+signal = sma_signal ? sma_3 : ema_3
+hist = macd - signal
+
+//ROC
+srcs = request.security(syminfo.ticker, roc_res, roc_src)
+roc = 100 * (srcs - srcs[roc_length]) / srcs[roc_length]
+if (roc_signal and macd_signal and roc > 0 and macd > 0 and setup.side == "SELL") or (roc_signal and not macd_signal and roc > 0 and setup.side == "SELL") or (not roc_signal and macd_signal and macd > signal and setup.side == "SELL") 
+    setup.side := "BUY"
+if (roc_signal and macd_signal and roc < 0 and macd < 0 and setup.side == "BUY") or (roc_signal and not macd_signal and roc < 0 and setup.side == "SELL") or (not roc_signal and macd_signal and macd < signal and setup.side == "SELL") 
+    setup.side := "SELL"
+
+
+
+bgcolor(setup.side == "BUY" ? color.new(color.green,70) : na, title = "BUY CROSS")
+bgcolor(setup.side == "SELL" ? color.new(color.red,70) : na, title = "SELL CROSS")
+plot(roc, color=color.new(#2962FF, 0), title='ROC', display = roc_signal?na:display.none)
+hline(0, color=#787B86, title='Zero Line', display = roc_signal?na:display.none)
+plot(hist, title='Histogram', style=plot.style_columns, color=hist >= 0 ? hist[1] < hist ? col_grow_above : col_fall_above : hist[1] < hist ? col_grow_below : col_fall_below, display = macd_signal?na:display.none)
+plot(macd, title='MACD', color=color.new(col_macd, 0), display = macd_signal?na:display.none)
+plot(signal, title='Signal', color=color.new(col_signal, 0), display = macd_signal?na:display.none)
