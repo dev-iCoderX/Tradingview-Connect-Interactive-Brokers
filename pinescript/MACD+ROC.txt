@@ -5,11 +5,22 @@ type setup
     string symbol
     string typeOrder
     string side
-    string entry
-    string amount
+    float entry
+    float amount
+
 var setup = setup.new()
 setup.symbol := syminfo.ticker
 setup.side := "SELL"
+
+method alertToMT5(setup this) =>
+    alert_array = array.new_string()
+    array.push(alert_array, '"symbol": "' + syminfo.ticker + '"')
+    array.push(alert_array, '"typeOrder": "' + this.typeOrder + '"')
+    array.push(alert_array, '"side": "' + this.side + '"')
+    array.push(alert_array, '"entry": "' + str.tostring(this.entry) + '"')
+    array.push(alert_array, '"amount": "' + str.tostring(this.amount) + '"')
+    alertstring = '{' + array.join(alert_array,', ') + '}'
+    alert(alertstring)
 
 macd_signal = input(title='MACD Enable', defval=true, group="MACD Settings")
 macd_src = input(title='MACD Source', defval=close, group="MACD Settings")
@@ -23,6 +34,10 @@ roc_signal = input(title='ROC Enable', defval=true, group="ROC Settings")
 roc_src = input(title='ROC Source', defval=close, group="ROC Settings")
 roc_res = input.timeframe(title="ROC Resolution", defval="D", group="ROC Settings")
 roc_length = input(title='ROC Length', defval=12, group="ROC Settings")
+amount = input.float(title='Amount Order', defval = 1.0, group = "Setting Order")
+typeOrder = input.string(title='Type Order', defval = "MARKET", options=['MARKET', 'LIMIT'], group = "Setting Order")
+setup.amount := amount
+setup.typeOrder := typeOrder
 
 //s = request.security(syminfo.ticker, macd_res, close)
 
@@ -57,8 +72,12 @@ srcs = request.security(syminfo.ticker, roc_res, roc_src)
 roc = 100 * (srcs - srcs[roc_length]) / srcs[roc_length]
 if (roc_signal and macd_signal and roc > 0 and macd > 0 and setup.side == "SELL") or (roc_signal and not macd_signal and roc > 0 and setup.side == "SELL") or (not roc_signal and macd_signal and macd > signal and setup.side == "SELL") 
     setup.side := "BUY"
+    setup.entry := close
+    setup.alertToMT5()
 if (roc_signal and macd_signal and roc < 0 and macd < 0 and setup.side == "BUY") or (roc_signal and not macd_signal and roc < 0 and setup.side == "SELL") or (not roc_signal and macd_signal and macd < signal and setup.side == "SELL") 
     setup.side := "SELL"
+    setup.entry := close
+    setup.alertToMT5()
 
 
 
