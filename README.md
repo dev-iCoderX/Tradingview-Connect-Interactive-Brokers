@@ -8,7 +8,7 @@ I. Set up Discord Bot
 
 4. Go to BOT > Reset Token > Copy > Save to: token.txt
 
-5. Go to your channel and copy your channel id after that, save it to: channel.txt
+5. Go to your channel you was add the bot and copy your channel id after that, save it to: channel.txt
 
 EX: https://discord.com/channels/866711400260173855/1024222839852781588
 
