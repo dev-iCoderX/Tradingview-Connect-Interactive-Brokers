@@ -1,3 +1,21 @@
+I. Set up Discord Bot
+
+1. Go to: https://discord.com/developers/applications
+
+2. Create new application
+
+3. Go OAuth2 > URL Generator > Chose "bot" > BOT PERMISSIONS  > Chose Administrator > Copy URL > Select Sever and add BOT
+
+4. Go to BOT > Reset Token > Copy > Save to: token.txt
+
+5. Go to your channel and copy your channel id after that, save it to: channel.txt
+
+EX: https://discord.com/channels/866711400260173855/1024222839852781588
+
+Channel ID is 1024222839852781588
+
+II. Set up connection
+
 1. Install ISS in Server Manager
 
 2. Download and install RequestRouter and Rewrite 

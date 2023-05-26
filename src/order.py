@@ -1,5 +1,6 @@
 from ib_insync import *
 from src.req import OrderDetail
+from src.dc import SendMess
 
 
 class MakeOrder:
@@ -8,6 +9,10 @@ class MakeOrder:
         self.allOrders = []
         self.ib = IB()
         self.ib.connect('127.0.0.1', 7497, clientId=1)
+        with open("token.txt", "r") as readToken:
+            self.token = readToken.read().replace("\n", '')
+        with open("channel.txt", "r") as readChannel:
+            self.channelID = int(readChannel.read().replace("\n", ''))
 
     def Order(self, item: OrderDetail):
         self.CloseAllOrders(item.symbol)
@@ -19,6 +24,9 @@ class MakeOrder:
             order = LimitOrder(item.side, item.amount, item.entry)
         trade = self.ib.placeOrder(stock, order)
         self.allOrders.append([item.symbol, order])
+        message = f"Placed order: [{item.symbol}]: {item.side} {item.typeOrder} {item.amount} at {item.entry}\n\n\n"
+        message += f"Result: {str(trade)}\n"
+        SendMess(self.token, message,self.channelID)
         print(trade)
         
     def CloseAllOrders(self, symbol: str):
